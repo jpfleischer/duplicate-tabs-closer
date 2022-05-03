@@ -13,14 +13,14 @@ const initialize = async () => {
 const loadPopupEvents = () => {
 
   /* Save checkbox settings */
-  $(".list-group input[type='checkbox'").on("change", function () {
+  $(".list-group input[type='checkbox']").on("change", function() {
     if (this.id.endsWith("Pinned")) toggleExpendGroup(this.id, true, true);
     const refresh = this.className.includes("checkbox-filter");
     saveOption(this.id, this.checked, refresh);
   });
 
   /* Save combobox settings */
-  $(".list-group select").on("change", function (event) {
+  $(".list-group select").on("change", function(event) {
     event.stopPropagation();
     const refresh = this.id === "scope";
     saveOption(this.id, this.value, refresh);
@@ -28,12 +28,12 @@ const loadPopupEvents = () => {
   });
 
   /* Save badge color settings */
-  $(".list-group input[type='color']").on("change", function () {
+  $(".list-group input[type='color']").on("change", function() {
     saveOption(this.id, this.value);
   });
 
   /* Save whiteList settings */
-  $("#whiteList").on("change", function () {
+  $("#whiteList").on("change", function() {
     let whiteList = $(this).val();
     whiteList = cleanUpWhiteList(whiteList);
     setWhiteList(whiteList);
@@ -41,25 +41,25 @@ const loadPopupEvents = () => {
   });
 
   /* Active selected tab */
-  $("#duplicateTabsTable").on("click", ".td-tab-title", function () {
+  $("#duplicateTabsTable").on("click", ".td-tab-title", function() {
     const tabId = parseInt($(this).parent().attr("tabId"), 10);
     const windowId = parseInt($(this).parent().attr("windowId"), 10);
     focusTab(tabId, windowId);
   });
 
   /* Close selected tab */
-  $("#duplicateTabsTable").on("click", ".td-close-button", function () {
+  $("#duplicateTabsTable").on("click", ".td-close-button", function() {
     const tabId = parseInt($(this).parent().attr("tabId"), 10);
     removeTab(tabId);
   });
 
   /* Close all */
-  $("#closeDuplicateTabsBtn").on("click", function () {
+  $("#closeDuplicateTabsBtn").on("click", function() {
     if (!$(this).hasClass("disabled")) requestCloseDuplicateTabs();
   });
 
   /* Toggle subitem panels */
-  $(".list-group-item-title").on("click", function () {
+  $(".list-group-item-title").on("click", function() {
     toggleExpendGroup(this.id, false);
   });
 
@@ -95,8 +95,7 @@ const toggleExpendGroup = (groupId, checkbox, resize) => {
       $(`#${listGroupId}`).toggleClass("list-group-expanded list-group-collapsed");
     }
     if (resize) resizeDuplicateTabsPanel();
-  }
-  else {
+  } else {
     $(`#${groupId}Body`).toggleClass("hidden");
     $(`#${groupId}`).toggleClass("list-group-expanded list-group-collapsed");
     resizeDuplicateTabsPanel();
@@ -113,16 +112,15 @@ const setDuplicateTabsTable = (duplicateTabs) => {
     duplicateTabs.forEach(duplicateTab => {
       const containerStyle = duplicateTab.containerColor ? `style='text-decoration:underline; text-decoration-color: ${duplicateTab.containerColor};'` : "";
       const title = (duplicateTab.windowId === activeWindowId) ? duplicateTab.title : `<em>${duplicateTab.title}</em>`;
-      const tdTabIcon = `<td class='td-tab-icon'><img src='${duplicateTab.icon}' alt=''></td>`;
-      const tdTabTitle = `<td class='td-tab-title' ${containerStyle}>${title}</td>`;
+      const tdTabIcon = `<td class="td-tab-icon"><img src="${duplicateTab.icon}" alt=""></td>`;
+      const tdTabTitle = `<td class="td-tab-title" ${containerStyle}>${title}</td>`;
       const tdCloseButton = "<td class='td-close-button'><button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button></td>";
-      tableRows += `<tr tabId='${duplicateTab.id}' windowId='${duplicateTab.windowId}'>${tdTabIcon}${tdTabTitle}${tdCloseButton}</tr>`;
+      tableRows += `<tr tabId="${duplicateTab.id}" windowId="${duplicateTab.windowId}">${tdTabIcon}${tdTabTitle}${tdCloseButton}</tr>`;
     });
     $("#duplicateTabsTableBody").append(tableRows);
     $("#closeDuplicateTabsBtn").toggleClass("disabled", false);
-  }
-  else {
-    $("#duplicateTabsTableBody").append(`<td class='td-tab-text'><em>${chrome.i18n.getMessage("noDuplicateTabs")}.</em></td>`);
+  } else {
+    $("#duplicateTabsTableBody").append(`<td class="td-tab-text"><em>${chrome.i18n.getMessage("noDuplicateTabs")}.</em></td>`);
     $("#closeDuplicateTabsBtn").toggleClass("disabled", true);
   }
   resizeDuplicateTabsPanel(true);
@@ -145,7 +143,11 @@ const saveActiveWindowId = async () => {
 
 const requestCloseDuplicateTabs = () => sendMessage("closeDuplicateTabs", { "windowId": activeWindowId });
 
-const saveOption = (name, value, refresh) => sendMessage("setStoredOption", { "name": name, "value": value, "refresh": refresh });
+const saveOption = (name, value, refresh) => sendMessage("setStoredOption", {
+  "name": name,
+  "value": value,
+  "refresh": refresh,
+});
 
 const requestGetDuplicateTabs = () => sendMessage("getDuplicateTabs", { "windowId": activeWindowId });
 
@@ -156,21 +158,17 @@ const setPanelOption = (details) => {
   const isLockedKey = details.isLockedKey || false;
   if (storedOption === "environment" && value === "chrome") {
     $(".containerItem").toggleClass("hidden", true);
-  }
-  else if (storedOption === "whiteList") {
+  } else if (storedOption === "whiteList") {
     $("#whiteList").val(value);
     if (isLockedKey) $("#whiteList").prop("disabled", true);
-  }
-  else {
+  } else {
     if (typeof (value) === "boolean") {
       $(`#${storedOption}`).prop("checked", value);
       if (storedOption.endsWith("Pinned")) toggleExpendGroup(storedOption, true);
-    }
-    else if (value.startsWith("#")) {
+    } else if (value.startsWith("#")) {
       // badge color value
       $(`#${storedOption}`).prop("value", value);
-    }
-    else {
+    } else {
       $(`#${storedOption} option[value='${value}']`).prop("selected", true);
       if (storedOption === "onDuplicateTabDetected") changeAutoCloseOptionState(value, resize);
     }
@@ -183,13 +181,21 @@ const setPanelOptions = async () => {
   const storedOptions = response.data.storedOptions;
   const lockedKeys = response.data.lockedKeys;
   for (const storedOption in storedOptions) {
-    setPanelOption({ storedOption: storedOption, value: storedOptions[storedOption].value, isLockedKey: lockedKeys.includes(storedOption) });
+    setPanelOption({
+      storedOption: storedOption,
+      value: storedOptions[storedOption].value,
+      isLockedKey: lockedKeys.includes(storedOption),
+    });
   }
 };
 
 const handleMessage = (message) => {
   if (message.action === "updateDuplicateTabsTable") setDuplicateTabsTable(message.data.duplicateTabs);
-  if (message.action === "setStoredOption") setPanelOption({ storedOption: message.data.name, value: message.data.value, resize: true });
+  if (message.action === "setStoredOption") setPanelOption({
+    storedOption: message.data.name,
+    value: message.data.value,
+    resize: true,
+  });
 };
 
 chrome.runtime.onMessage.addListener(handleMessage);
