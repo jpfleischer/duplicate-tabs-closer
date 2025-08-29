@@ -59,7 +59,7 @@
 		"description": "Do nothing",
 		"message": "Do nothing"
 	},
-	"duplicatetabs": {
+	"duplicateTabs": {
 		"description": "Duplicate tabs",
 		"message": "Duplicate tabs"
 	},
@@ -107,7 +107,7 @@
 		"description": "Keep tab with history",
 		"message": "Keep tab with history"
 	},
-	"keeptabwithHttps": {
+	"keepTabWithHttps": {
 		"description": "Keep tab with https",
 		"message": "Keep tab with https"
 	},
@@ -158,5 +158,9 @@
 	"whiteList": {
 		"description": "Whitelisted URLs",
 		"message": "Whitelisted URLs"
+	},
+	"removeDuplicatesKeepLatest": {
+		"description": "Close all duplicate tabs in the group except the most recent one",
+		"message": "Remove duplicates (keep latest)"
 	}
 }

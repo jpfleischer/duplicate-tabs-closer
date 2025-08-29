@@ -1,3 +1,17 @@
+# new
+
+```bash
+npm i -g web-ext
+cp manifest-f.json manifest.json # this is temp. undo it later
+web-ext build --overwrite-dest
+```
+Open Firefox.
+
+Go to about:debugging#/runtime/this-firefox in the address bar.
+
+Click “Load Temporary Add-on…”. then go to web-ext-artifacts
+
+
 # Duplicate Tabs Closer
 
 Duplicate Tabs Closer detects and closes duplicate tabs.

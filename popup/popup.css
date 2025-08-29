@@ -1,15 +1,47 @@
-html {
-	max-height: 591px;
-}
+html, body { height: 100%; }
 
 body {
-	margin: 5px;
-	overflow: hidden;
-	width: 320px;
-	font-size: 12px;
-	line-height: 1.5;
-	color: #3c4859;
-	font-family: Arial, Helvetica, sans-serif;
+  margin: 5px;
+  overflow: hidden;         /* prevent outer scrollbars */
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #3c4859;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Make the whole panel area a flex column that fills the popup */
+.panel-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;            /* allow children to shrink */
+}
+
+/* Options card is content-height, can scroll internally if very tall */
+#optionsCard {
+  flex: 0 0 auto;
+}
+#optionsCard .card-body {
+  /* optional cap so Options never eats the whole popup */
+  max-height: 40vh;
+  overflow: auto;
+}
+
+/* Duplicate Tabs card takes the rest of the space */
+#duplicateTabsCard {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;        /* small floor so it’s usable */
+}
+#duplicateTabsCard .card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;            /* critical for nested flex scrolling */
 }
 
 .card {
@@ -212,8 +244,11 @@ body {
 	margin-right: 2px;
 }
 
+/* The table container becomes the scroller */
 #duplicateTabsTableContainer {
-	transition: box-shadow 0.3s linear;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .table-scrollable-shadow {
@@ -258,10 +293,32 @@ body {
 	cursor: pointer;
 }
 
+/* --- cell sizing/placement tweaks --- */
 .td-close-button {
-	width: 5px;
-	padding: 1px 5px 1px 1px !important;
-	cursor: pointer;
+  width: 20px;
+  padding: 0 4px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.td-close-group {
+  width: 26px;
+  padding: 0 4px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+/* compact group button (icon-only, no border, not tall) */
+.td-close-group .btn {
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  border: none;
+  background: transparent;
+}
+
+.td-close-group .fa {
+  font-size: 14px;
 }
 
 .table-footer {
@@ -399,4 +456,29 @@ label > input:disabled ~ * {
 .highlight-scroll-bottom {
 	box-shadow: 0px 0px 7px 5px var(--blue-60);
 	transition: box-shadow 0s;
+}
+
+
+/* Stronger group shading that overrides Bootstrap */
+#duplicateTabsTableBody tr.group-even > td { 
+  background-color: #eef6ff !important;  /* a bit stronger than #f7fbff */
+}
+#duplicateTabsTableBody tr.group-odd > td  { 
+  background-color: #ffffff !important;
+}
+
+/* Keep shading on hover (override .table-hover) */
+#duplicateTabsTableBody tr.group-even:hover > td { 
+  background-color: #e3f0ff !important;
+}
+#duplicateTabsTableBody tr.group-odd:hover > td  { 
+  background-color: #fafcff !important;
+}
+
+/* Make sure the right-side rowspan cell inherits the stripe too */
+#duplicateTabsTableBody tr.group-even > td.td-close-group { 
+  background-color: #eef6ff !important;
+}
+#duplicateTabsTableBody tr.group-odd  > td.td-close-group { 
+  background-color: #ffffff !important;
 }

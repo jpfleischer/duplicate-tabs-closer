@@ -1,12 +1,6 @@
 "use strict";
 
-importScripts("helper.js");
-importScripts("tabsInfo.js");
-importScripts("options.js");
-importScripts("urlUtils.js");
-importScripts("badge.js");
-importScripts("worker.js");
-importScripts("messageListener.js");
+
 
 const onCreatedTab = (tab) => {
 	tabsInfo.setNewTab(tab);

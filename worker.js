@@ -61,6 +61,56 @@ const getLastUpdatedTabId = (observedTab, openTab) => {
 	}
 };
 
+// pick the "latest" tab by lastComplete, with sensible tie-breakers
+const pickLatestTab = (tabs, activeWindowId) => {
+  let best = null;
+  for (const t of tabs) {
+    const cand = {
+      tab: t,
+      last: tabsInfo.getLastComplete(t.id) ?? 0,
+      activeWin: t.windowId === activeWindowId,
+      active: !!t.active,
+      index: t.index ?? 9e9,
+      id: t.id
+    };
+    if (!best) { best = cand; continue; }
+    if (cand.last !== best.last) { best = cand.last > best.last ? cand : best; continue; }
+    if (cand.activeWin !== best.activeWin) { best = cand.activeWin ? cand : best; continue; }
+    if (cand.active !== best.active) { best = cand.active ? cand : best; continue; }
+    if (cand.index !== best.index) { best = cand.index < best.index ? cand : best; continue; }
+    if (cand.id !== best.id) { best = cand.id > best.id ? cand : best; continue; }
+  }
+  return best?.tab || null;
+};
+
+// close everything in the group except the chosen "latest"
+const closeDuplicateGroup = async (groupId, windowIdHint) => {
+  // Recompute groups to be accurate at click time
+  const { duplicateTabsGroups, activeWindowId } = await searchForDuplicateTabs(windowIdHint, false);
+  const group = duplicateTabsGroups.get(groupId);
+  if (!group || group.size < 2) return; // nothing to do
+  const toArray = Array.from(group);
+  const keep = pickLatestTab(toArray, activeWindowId);
+  if (!keep) return;
+
+  const toCloseIds = toArray.filter(t => t.id !== keep.id).map(t => t.id);
+  if (toCloseIds.length) {
+    try {
+      // ignore the closed tabs to avoid flicker and races
+      toCloseIds.forEach(id => tabsInfo.ignoreTab(id, true));
+      await chrome.tabs.remove(toCloseIds);
+    } catch (e) {
+      // best-effort: unignore on failure
+      toCloseIds.forEach(id => tabsInfo.ignoreTab(id, false));
+      throw e;
+    } finally {
+      // refresh badges/panel
+      refreshDuplicateTabsInfo(keep.windowId);
+    }
+  }
+};
+
+
 const getFocusedTab = (observedTab, openTab, activeWindowId, retainedTabId) => {
 	if (retainedTabId === observedTab.id) {
 		return openTab.windowId === activeWindowId &&
@@ -302,41 +352,79 @@ const toggleAutoClose = async () => {
 	await setStoredOption("onDuplicateTabDetected", value, false);
 };
 
-const setDuplicateTabPanel = async (duplicateTab, duplicateTabs) => {
-	let containerColor = "";
-	if (
-		environment.isFirefox &&
-		!tab.incognito &&
-		tab.cookieStoreId !== "firefox-default"
-	) {
-		const getContext = await browser.contextualIdentities.get(
-			tab.cookieStoreId,
-		);
-		if (getContext) containerColor = getContext.color;
-	}
-	duplicateTabs.add({
-		id: tab.id,
-		url: tab.url,
-		title: tab.title || tab.url,
-		windowId: tab.windowId,
-		containerColor: containerColor,
-		icon: tab.favIconUrl || "../images/default-favicon.png",
-	});
+const setDuplicateTabPanel = async (duplicateTab, duplicateTabs, groupId) => {
+  let containerColor = "";
+  try {
+    if (
+      environment.isFirefox &&
+      !duplicateTab.incognito &&
+      duplicateTab.cookieStoreId &&
+      duplicateTab.cookieStoreId !== "firefox-default" &&
+      browser?.contextualIdentities?.get
+    ) {
+      const ctx = await browser.contextualIdentities.get(duplicateTab.cookieStoreId);
+      if (ctx?.color) containerColor = ctx.color;
+    }
+  } catch (_) {}
+
+  duplicateTabs.add({
+    id: duplicateTab.id,
+    url: duplicateTab.url,
+    title: duplicateTab.title || duplicateTab.url,
+    windowId: duplicateTab.windowId,
+    index: duplicateTab.index,
+    pinned: !!duplicateTab.pinned,
+    active: !!duplicateTab.active,
+    lastComplete: tabsInfo.getLastComplete(duplicateTab.id) ?? 0,
+    groupId, // ← important: send group key to the panel
+    containerColor,
+    icon: duplicateTab.favIconUrl || "../images/default-favicon.png",
+  });
 };
 
+
 const getPanelDuplicateTabs = async (duplicateTabsGroups) => {
-	if (duplicateTabsGroups.size === 0) return null;
-	const duplicateTabs = new Set();
-	for (const groupTab of duplicateTabsGroups) {
-		const duplicateGroupTabs = groupTab[1];
-		await Promise.all(
-			Array.from(duplicateGroupTabs, (duplicateTab) =>
-				setDuplicateTabPanel(duplicateTab, duplicateTabs),
-			),
-		);
-	}
-	return Array.from(duplicateTabs);
+  if (duplicateTabsGroups.size === 0) return null;
+
+  // Build flat list + enrich (already adds lastComplete, pinned, index, active, groupId)
+  const collected = new Set();
+  for (const [groupId, group] of duplicateTabsGroups) {
+    await Promise.all(Array.from(group, (t) => setDuplicateTabPanel(t, collected, groupId)));
+  }
+  const items = Array.from(collected);
+
+  // Sort: active window → pinned → NEWEST first → active tab → tab index → title → id
+  const activeWindowId = await getActiveWindowId();
+
+  items.sort((a, b) => {
+    // 1) Active window first
+    const awA = a.windowId === activeWindowId, awB = b.windowId === activeWindowId;
+    if (awA !== awB) return awB - awA;
+
+    // 2) Pinned first
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+
+    // 3) Newest (lastComplete) first; default 0 if missing
+    const lcA = a.lastComplete ?? 0, lcB = b.lastComplete ?? 0;
+    if (lcA !== lcB) return lcB - lcA;
+
+    // 4) Active tab before inactive (nice tie-breaker)
+    if (a.active !== b.active) return a.active ? -1 : 1;
+
+    // 5) Then by tab strip order within same window (index asc)
+    if (a.windowId === b.windowId && a.index != null && b.index != null && a.index !== b.index) {
+      return a.index - b.index;
+    }
+
+    // 6) Title then id as stable fallbacks
+    const t = (a.title || "").localeCompare(b.title || "");
+    if (t) return t;
+    return (a.id || 0) - (b.id || 0);
+  });
+
+  return items;
 };
+
 
 // eslint-disable-next-line no-unused-vars
 const requestDuplicateTabsFromPanel = async (windowId) => {
