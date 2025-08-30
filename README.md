@@ -4,6 +4,9 @@
 npm i -g web-ext
 cp manifest-f.json manifest.json # this is temp. undo it later
 web-ext build --overwrite-dest
+
+powershell -NoProfile "[guid]::NewGuid().ToString()"
+# put that into manifest with an @<username> at the end
 ```
 Open Firefox.
 
