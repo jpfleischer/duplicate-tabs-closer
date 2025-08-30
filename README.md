@@ -1,3 +1,5 @@
+https://addons.mozilla.org/en-US/firefox/addon/duptabx/
+
 # new
 
 ```bash
