@@ -1,5 +1,18 @@
-"use strict";
+// background.js (MV3 service worker, ESM)
+import { initializeOptions, options, environment } from "./options.js";
+import { tabsInfo } from "./tabsInfo.js";
+import { getTab } from "./helper.js";
+import { isBlankURL, isChromeURL } from "./urlUtils.js";
+import { setBadgeIcon, setBadge } from "./badge.js";
+import {
+  searchForDuplicateTabsToClose,
+  refreshDuplicateTabsInfo,
+  refreshGlobalDuplicateTabsInfo,
+  closeDuplicateTabs,
+  toggleAutoClose
+} from "./worker.js";
 
+import "./messageListener.js";
 
 
 const onCreatedTab = (tab) => {

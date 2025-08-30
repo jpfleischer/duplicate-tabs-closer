@@ -1,5 +1,13 @@
 "use strict";
 
+import { getActiveWindowId, sendMessage, getStoredOptions, areSameArrays } from "../helper.js";
+import {
+  requestDuplicateTabsFromPanel,
+  closeDuplicateGroup,
+  closeDuplicateTabs
+} from "../worker.js";
+
+
 let activeWindowId = chrome.windows.WINDOW_ID_NONE;
 let lastDuplicateTabs = {};
 let closePopup = false;

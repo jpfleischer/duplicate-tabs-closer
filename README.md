@@ -17,6 +17,15 @@ Go to about:debugging#/runtime/this-firefox in the address bar.
 Click “Load Temporary Add-on…”. then go to web-ext-artifacts
 
 
+## chrome
+
+```
+mkdir -p dist
+zip -r -FS dist/duptabx-1.0.0.zip . \
+  -x "web-ext-artifacts/*" ".git/*" "*.md" "manifest-f.json" "manifest-c.json" "biome.json"
+```
+
+
 # Duplicate Tabs Closer
 
 Duplicate Tabs Closer detects and closes duplicate tabs.

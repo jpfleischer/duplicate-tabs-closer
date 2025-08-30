@@ -1,16 +1,17 @@
 {
 	"manifest_version": 2,
-	"name": "Duplicate Tabs Closer",
-	"version": "3.6.1",
-	"author": "Peuj",
+	"name": "DupTabX",
+	"version": "1.0.0",
+	"author": "jpfleischer",
+	"homepage_url": "https://github.com/jpfleischer/duplicate-tabs-closer/",
 	"default_locale": "en",
-	"description": "Duplicate Tabs Closer",
+	"description": "The best way to manage duplicate tabs.",
 	"icons": {
 		"48": "images/auto_close_32.png"
 	},
 	"applications": {
 		"gecko": {
-			"id": "8eb46bae-a28b-4271-b139-53f788c41625@jetpack",
+			"id": "77b3f8b0-10ef-47c6-b5f6-b6e43f036d1d@jpfleischer",
 			"strict_min_version": "68.0"
 		}
 	},
@@ -32,7 +33,7 @@
 			"16": "images/auto_close_16.png",
 			"32": "images/auto_close_32.png"
 		},
-		"default_title": "Duplicate Tabs Closer",
+		"default_title": "DupTabX",
 		"default_popup": "popup/popup.html"
 	},
 	"permissions": [
