@@ -20,14 +20,30 @@ body {
   min-height: 0;            /* allow children to shrink */
 }
 
-/* Options card is content-height, can scroll internally if very tall */
-#optionsCard {
-  flex: 0 0 auto;
+/* Thin horizontal bar between options and duplicate tabs */
+#panelResizer {
+	flex: 0 0 4px;
+	margin: 2px 0;
+	background: #d0d7e2;
+	cursor: row-resize;
+	/* shows vertical resize cursor */
 }
+
+/* slightly darker on hover so it's obvious */
+#panelResizer:hover {
+	background: #b3c0d8;
+}
+
+/* Let JS control the options-card height instead of hard max-height */
+#optionsCard {
+	flex: 0 0 auto;
+	overflow: hidden;
+}
+
 #optionsCard .card-body {
-  /* optional cap so Options never eats the whole popup */
-  max-height: 40vh;
-  overflow: auto;
+	max-height: none;
+	/* JS will effectively cap it via card height */
+	overflow: auto;
 }
 
 /* Duplicate Tabs card takes the rest of the space */

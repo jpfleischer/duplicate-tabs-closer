@@ -36,6 +36,41 @@ const toggleExpendGroup = (eventId, isTitleClickEvent, pinned, resize) => {
 	}
 };
 
+const initPanelResizer = () => {
+	const resizer = document.getElementById("panelResizer");
+	const topCard = document.getElementById("optionsCard");
+	const container = document.querySelector(".panel-group");
+	if (!resizer || !topCard || !container) return;
+
+	let startY = 0;
+	let startHeight = 0;
+
+	const onMouseMove = (e) => {
+		const dy = e.clientY - startY;
+		let newHeight = startHeight + dy;
+
+		const minTop = 80;                             // px: minimum options height
+		const minBottom = 160;                         // px: keep room for bottom card
+		const maxTop = container.clientHeight - minBottom;
+
+		newHeight = Math.max(minTop, Math.min(maxTop, newHeight));
+		topCard.style.height = `${newHeight}px`;
+	};
+
+	const stopDrag = () => {
+		window.removeEventListener("mousemove", onMouseMove);
+		window.removeEventListener("mouseup", stopDrag);
+	};
+
+	resizer.addEventListener("mousedown", (e) => {
+		startY = e.clientY;
+		startHeight = topCard.getBoundingClientRect().height;
+		window.addEventListener("mousemove", onMouseMove);
+		window.addEventListener("mouseup", stopDrag);
+	});
+};
+
+
 // put these near the top of popup.js (or just above setDuplicateTabsTable)
 const _tabSortComparator = (a, b) => {
   // within a group: pinned → newest → active → index → title → id
@@ -374,6 +409,7 @@ const initialize = async () => {
 	localizePopup();
 	startObserver();
 	loadListenerEvents();
+	initPanelResizer();
 };
 
 document.addEventListener("DOMContentLoaded", initialize);
